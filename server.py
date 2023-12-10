@@ -66,11 +66,11 @@ def get_http_error(error_class: Type[web.HTTPClientError], message):
 #     return adv
 #
 async def get_adv_by_id(adv_id: int, session: Session):
-    advert = await session.get(Adverts, adv_id)
-    if advert is None:
+    adv = await session.get(Adverts, adv_id)
+    if adv is None:
         raise web.HTTPNotFound(text=json.dumps({'status': 'error', 'message': 'advert not found'}),
                             content_type='application/json')
-    return advert
+    return adv
 #
 
 
