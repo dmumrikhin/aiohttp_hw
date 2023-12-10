@@ -59,11 +59,21 @@ def get_http_error(error_class: Type[web.HTTPClientError], message):
     )
 
 
-async def get_adv_by_id(session: Session, adv_id: int) -> Adverts:
-    adv = await session.get(Adverts, adv_id)
-    if adv is None:
-        raise get_http_error(web.HTTPNotFound, f'Advertisement with id {adv_id} not found')
-    return adv
+# async def get_adv_by_id(session: Session, adv_id: int) -> Adverts:
+#     adv = await session.get(Adverts, adv_id)
+#     if adv is None:
+#         raise get_http_error(web.HTTPNotFound, f'Advertisement with id {adv_id} not found')
+#     return adv
+#
+async def get_adv_by_id(adv_id: int, session: Session):
+    advert = await session.get(Adverts, adv_id)
+    if advert is None:
+        raise web.HTTPNotFound(text=json.dumps({'status': 'error', 'message': 'advert not found'}),
+                            content_type='application/json')
+    return advert
+#
+
+
     
 async def add_adv(session: Session, adv: Adverts):
     try:
@@ -83,8 +93,13 @@ class AdvertsView(web.View):
     def session(self) -> Session:              
         return self.request.session
 
+    # async def get(self):
+    #     adv = await get_adv_by_id(self.session, self.adv_id) 
+    #     return web.json_response(adv.dict) 
+
     async def get(self):
-        adv = await get_adv_by_id(self.session, self.adv_id) 
+        adv = await get_adv_by_id(int(self.request.match_info['adv_id']), 
+                                  self.request.session)
         return web.json_response(adv.dict) 
 
     async def post(self):
@@ -94,7 +109,15 @@ class AdvertsView(web.View):
         return web.json_response({'id': adv.id})   
 
     async def patch(self):
-        adv = await get_adv_by_id(self.session, self.adv_id) 
+        # adv = await get_adv_by_id(self.session, self.adv_id) 
+        # adv_data = await self.request.json()  
+        # for field, value in adv_data.items():
+        #     setattr(adv, field, value)   
+        #     await add_adv(self.session, adv)
+        # return web.json_response({'id': adv.id})   
+
+        adv = await get_adv_by_id(int(self.request.match_info['adv_id']), 
+                                  self.request.session)
         adv_data = await self.request.json()  
         for field, value in adv_data.items():
             setattr(adv, field, value)   
@@ -102,8 +125,11 @@ class AdvertsView(web.View):
         return web.json_response({'id': adv.id})   
 
 
+
     async def delete(self):
-        adv = await get_adv_by_id(self.session, self.adv_id) 
+        # adv = await get_adv_by_id(self.session, self.adv_id) 
+        adv = await get_adv_by_id(int(self.request.match_info['adv_id']), 
+                                  self.request.session)
         await self.session.delete(adv)
         await self.session.commit()        
         return web.json_response({'status': 'ok'})
